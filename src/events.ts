@@ -1,8 +1,10 @@
 import { Faction, GameEvent, GameState } from './types';
+import { randomizeModifier } from './randomizer';
 
 // Helper to modify faction popularity safely
 const mod = (state: GameState, faction: Faction, amount: number) => {
-    state.popularity[faction] = Math.max(0, Math.min(100, state.popularity[faction] + amount));
+    const actualAmount = randomizeModifier(amount);
+    state.popularity[faction] = Math.max(0, Math.min(100, state.popularity[faction] + actualAmount));
 };
 
 export const EVENTS: GameEvent[] = [
@@ -10,7 +12,7 @@ export const EVENTS: GameEvent[] = [
     {
         id: 'initial_speech',
         title: 'Inauguration Day Speech',
-        description: 'It is January 2026. You step onto the balcony of the Casa de Nariño. The square is packed. Donald Trump has just sent a tweet warning you not to "mess up the remittance flow". The local Cartels are quiet, watching. What is the theme of your first address?',
+        description: 'It is January 2026. You have won a fair and square election to become the new president of Colombia. Well, fair enough anyway.\n\nYou step onto the balcony of the Casa de Nariño. The square is packed. Donald Trump has just sent a tweet warning you not to "mess it up". The local Cartels are quiet, watching. What is the theme of your first address?',
         choices: [
             {
                 text: 'Promise "Iron Fist" security measures.',
@@ -25,7 +27,7 @@ export const EVENTS: GameEvent[] = [
             {
                 text: 'Promise "Social Justice" and redistribution.',
                 effect: (s, log) => {
-                    mod(s, Faction.Public, 10);
+                    mod(s, Faction.Public, 15);
                     mod(s, Faction.Guerillas, 5);
                     mod(s, Faction.Oligarchs, -15);
                     mod(s, Faction.USA, -10);
@@ -36,10 +38,10 @@ export const EVENTS: GameEvent[] = [
             {
                 text: 'Promise "Free Market" and open business.',
                 effect: (s, log) => {
-                    mod(s, Faction.Oligarchs, 15);
-                    mod(s, Faction.USA, 5);
-                    mod(s, Faction.Public, -20);
-                    mod(s, Faction.Guerillas, -2);
+                    mod(s, Faction.Oligarchs, 10);
+                    mod(s, Faction.USA, 3);
+                    mod(s, Faction.Public, -15);
+                    mod(s, Faction.Guerillas, -5);
                     mod(s, Faction.Cartels, 2); // Easier to wash money
                     s.treasury += 5;
                     s.personalAccount += 2;
@@ -59,7 +61,7 @@ export const EVENTS: GameEvent[] = [
                     mod(s, Faction.USA, 5);
                     mod(s, Faction.Army, 5);
                     mod(s, Faction.Public, -14);
-                    s.treasury -= 2;
+                    s.treasury -= 1;
                     log("The border is sealed. Human rights groups are furious, but Washington is happy.");
                 }
             },
@@ -93,7 +95,7 @@ export const EVENTS: GameEvent[] = [
             {
                 text: 'Reject the offer and raid his compound!',
                 effect: (s, log) => {
-                    mod(s, Faction.Cartels, -20);
+                    mod(s, Faction.Cartels, -15);
                     mod(s, Faction.USA, 5);
                     mod(s, Faction.Public, 5);
                     mod(s, Faction.Guerillas, 2);
@@ -105,19 +107,20 @@ export const EVENTS: GameEvent[] = [
                 effect: (s, log) => {
                     mod(s, Faction.Cartels, 10);
                     mod(s, Faction.USA, -15);
-                    mod(s, Faction.Public, -5);
                     mod(s, Faction.Guerillas, -2);
                     s.treasury += 35;
                     log("The budget is balanced... with blood money.");
                 }
             },
             {
-                text: 'Accept the money into your Swiss account.',
+                text: 'Accept the money for the Treasury AND some into your Swiss account.',
                 effect: (s, log) => {
                     mod(s, Faction.Cartels, 10);
-                    mod(s, Faction.Public, -15);
+                    mod(s, Faction.USA, -15);
+                    mod(s, Faction.Public, -10);
                     mod(s, Faction.Oligarchs, -5);
-                    s.personalAccount += 15;
+                    s.treasury += 25;
+                    s.personalAccount += 5;
                     log("You have a very nice new yacht in the catalog.");
                 }
             }
@@ -131,7 +134,7 @@ export const EVENTS: GameEvent[] = [
             {
                 text: 'Launch the Crypto-Peso! To the moon!',
                 effect: (s, log) => {
-                    mod(s, Faction.Oligarchs, -20);
+                    mod(s, Faction.Oligarchs, -15);
                     mod(s, Faction.Public, -5); 
                     mod(s, Faction.Cartels, 5); // Laundering heaven
                     s.treasury -= 10;
@@ -157,19 +160,20 @@ export const EVENTS: GameEvent[] = [
             {
                 text: 'Approve the golf course. Destroy the forest.',
                 effect: (s, log) => {
-                    mod(s, Faction.USA, 10);
-                    mod(s, Faction.Public, -15);
-                    mod(s, Faction.Guerillas, 5);
-                    mod(s, Faction.Oligarchs, -5); // Disruption
-                    s.personalAccount += 2; 
+                    mod(s, Faction.USA, 5);
+                    mod(s, Faction.Public, -8);
+                    mod(s, Faction.Guerillas, -2);
+                    mod(s, Faction.Oligarchs, 3); // Disruption
+                    s.personalAccount += 1; 
                     log("You are hailed as a 'Very smart negotiator' on Truth Social.");
                 }
             },
             {
                 text: 'Refuse. The environment is sacred.',
                 effect: (s, log) => {
-                    mod(s, Faction.USA, -15);
+                    mod(s, Faction.USA, -5);
                     mod(s, Faction.Public, 5);
+                    mod(s, Faction.Oligarchs, -2);
                     log("Trump tweets major insults about your appearance.");
                 }
             }
@@ -185,27 +189,31 @@ export const EVENTS: GameEvent[] = [
                 effect: (s, log) => {
                     mod(s, Faction.Oligarchs, 10);
                     mod(s, Faction.USA, 5);
-                    mod(s, Faction.Public, -20);
-                    mod(s, Faction.Guerillas, 5); 
-                    s.treasury += 20;
+                    mod(s, Faction.Public, -15);
+                    mod(s, Faction.Guerillas, -5); 
+                    s.treasury += 15;
+                    s.personalAccount += 2;
                     log("Tesla announces 'Giga-Bogota'. Protesters glue themselves to the entrance.");
                 }
             },
             {
                 text: 'No. The Amazon is not for sale.',
                 effect: (s, log) => {
-                    mod(s, Faction.Public, 10);
-                    mod(s, Faction.USA, -5);
-                    mod(s, Faction.Oligarchs, -10);
+                    mod(s, Faction.Public, 15);
+                    mod(s, Faction.USA, -9);
+                    mod(s, Faction.Oligarchs, -9);
                     log("Elon calls you a 'pedoyguy' on X. Your popularity with youth drops slightly.");
                 }
             },
             {
                 text: 'Tell him he can only mine if he buys the national airline first.',
                 effect: (s, log) => {
-                    mod(s, Faction.Oligarchs, 5);
+                    mod(s, Faction.Oligarchs, 7);
                     mod(s, Faction.Public, -10);
-                    s.treasury += 5;
+                    mod(s, Faction.USA, 3);
+                    mod(s, Faction.Guerillas, -5);
+                    s.treasury += 20;
+                    
                     log("He actually does it. The airline is renamed 'X-Air' and now accepts Dogecoin.");
                 }
             }
@@ -214,7 +222,7 @@ export const EVENTS: GameEvent[] = [
     {
         id: 'pop_star_tax',
         title: 'Hips Don\'t Lie (But Taxes Might)',
-        description: 'Colombia\'s biggest pop star is accused of evading $15M in taxes. She threatens to release a diss track about your administration if you pursue the case.',
+        description: 'Colombia\'s biggest pop star is accused of evading $1.5B in taxes. She threatens to release a diss track about your administration if you pursue the case.',
         choices: [
             {
                 text: 'Prosecute her! Everyone must pay.',
@@ -269,7 +277,6 @@ export const EVENTS: GameEvent[] = [
                     mod(s, Faction.USA, -10);
                     mod(s, Faction.Oligarchs, -5);
                     s.treasury -= 10;
-                    s.personalAccount -= 2; 
                     log("It works, but it's obvious. FIFA investigates, but who cares? Check the scoreboard.");
                 }
             }
@@ -295,6 +302,7 @@ export const EVENTS: GameEvent[] = [
                 effect: (s, log) => {
                     mod(s, Faction.Public, -10);
                     mod(s, Faction.Oligarchs, -5); 
+                    mod(s, Faction.Guerillas, 3);
                     log("A meme of you falling into a pothole goes viral.");
                 }
             }
@@ -401,22 +409,23 @@ export const EVENTS: GameEvent[] = [
      {
         id: 'tax_reform',
         title: 'The Annual Tax Reform',
-        description: 'The Finance Minister says we are broke. Again. He proposes taxing basic food items.',
+        description: 'The Finance Minister says we are almost broke. Again. He proposes taxing basic food items.',
         choices: [
             {
                 text: 'Approve the tax. We need stability.',
                 effect: (s, log) => {
                     mod(s, Faction.Oligarchs, 10);
                     mod(s, Faction.USA, 5); // IMF is happy
-                    mod(s, Faction.Public, -20);
-                    s.treasury += 20;
+                    mod(s, Faction.Public, -15);
+                    s.treasury += 10;
                     log("Protests erupt immediately. The IMF upgrades our credit rating.");
                 }
             },
             {
                 text: 'Tax the rich instead.',
                 effect: (s, log) => {
-                    mod(s, Faction.Oligarchs, -20);
+                    mod(s, Faction.Oligarchs, -15);
+                    mod(s, Faction.USA, -3);
                     mod(s, Faction.Public, 10);
                     s.treasury += 10;
                     log("Capital flight accelerates. But you are a hero to the working class.");
@@ -465,20 +474,22 @@ export const EVENTS: GameEvent[] = [
         description: 'Pablo Escobar\'s hippos have multiplied and are now threatening a major town. Biology experts are baffled.',
         choices: [
             {
-                text: 'Cull them. Sorry.',
+                text: 'Cull them and sell hippo burgers. Sorry.',
                 effect: (s, log) => {
-                    mod(s, Faction.Public, -10); // Animal lovers angry
-                    mod(s, Faction.Army, 5); // Target practice
+                    mod(s, Faction.Public, 2);
+                    mod(s, Faction.Army, 3); // Target practice
+                    mod(s, Faction.Cartels, -2); // Cultural loss
+                    mod(s, Faction.USA, -5);
+                    s.treasury += 2; 
                     log("International outcry. Netflix makes a documentary about your cruelty.");
                 }
             },
             {
-                text: 'Send them to the USA as a "gift".',
+                text: 'Allow them to roam free. Nature finds a way.',
                 effect: (s, log) => {
-                    mod(s, Faction.USA, -10);
-                    mod(s, Faction.Public, 10);
-                    s.treasury -= 5;
-                    log("Florida now has a wild hippo problem. Trump is furious.");
+                    mod(s, Faction.Public, -3);
+                    mod(s, Faction.Oligarchs, -2);
+                    log("The city now has a new tourist attraction. Hippo selfies are trending.");
                 }
             }
         ]
@@ -493,40 +504,18 @@ export const EVENTS: GameEvent[] = [
                 effect: (s, log) => {
                     mod(s, Faction.Oligarchs, -10);
                     mod(s, Faction.Guerillas, -5);
+                    mod(s, Faction.Public, 5);
                     log("Tech bros leave the country.");
                 }
             },
             {
                 text: 'Buy one. It looks cool.',
                 effect: (s, log) => {
-                    mod(s, Faction.Guerillas, 5);
+                    mod(s, Faction.Guerillas, 7);
                     mod(s, Faction.Army, -10);
                     mod(s, Faction.USA, -5);
-                    s.personalAccount -= 1;
+                    s.treasury -= 1;
                     log("You are now the owner of Ape #420. The Army is confused.");
-                }
-            }
-        ]
-    },
-    {
-        id: 'influencer_scandal',
-        title: 'TikTok Diplomacy',
-        description: 'Your Foreign Minister was caught dancing on TikTok while the UN discussed sanctions.',
-        choices: [
-            {
-                text: 'Fire him.',
-                effect: (s, log) => {
-                    mod(s, Faction.Oligarchs, 5); // Professionalism
-                    log("He becomes a full-time streamer and attacks you daily.");
-                }
-            },
-            {
-                text: 'Join him in a duet.',
-                effect: (s, log) => {
-                    mod(s, Faction.Public, 10); // Youth vote
-                    mod(s, Faction.USA, -5); // Unprofessional
-                    mod(s, Faction.Army, -5);
-                    log("The video gets 50M views. Global embarrassment.");
                 }
             }
         ]
@@ -579,7 +568,7 @@ export const EVENTS: GameEvent[] = [
                     mod(s, Faction.Cartels, 5);
                     mod(s, Faction.Public, -10);
                     s.treasury += 10;
-                    s.personalAccount += 5;
+                    s.personalAccount += 2;
                     log("The fish are dying, but your pockets are full.");
                 }
             }
@@ -598,6 +587,7 @@ export const EVENTS: GameEvent[] = [
                     mod(s, Faction.Public, 10);
                     mod(s, Faction.Oligarchs, 5);
                     mod(s, Faction.USA, -15);
+                    mod(s, Faction.Army, -3);
                     s.treasury += 15; // Loan injection
                     log("Construction starts. Washington cancels your visa.");
                 }
@@ -607,6 +597,7 @@ export const EVENTS: GameEvent[] = [
                 effect: (s, log) => {
                     mod(s, Faction.USA, 10);
                     mod(s, Faction.Public, -5);
+                    mod(s, Faction.Oligarchs, -5);
                     log("We stay with our old trucks. Traffic remains terrible.");
                 }
             }
@@ -621,7 +612,7 @@ export const EVENTS: GameEvent[] = [
                 text: 'Expel them immediately.',
                 effect: (s, log) => {
                     mod(s, Faction.USA, 10);
-                    mod(s, Faction.Public, 5); // Patriotism
+                    mod(s, Faction.Oligarchs, -3); 
                     mod(s, Faction.Guerillas, -5);
                     log("Putin calls you a 'NATO puppet'.");
                 }
@@ -630,7 +621,7 @@ export const EVENTS: GameEvent[] = [
                 text: 'Do nothing. They buy our flowers.',
                 effect: (s, log) => {
                     mod(s, Faction.Oligarchs, 5);
-                    mod(s, Faction.USA, -10);
+                    mod(s, Faction.USA, -8);
                     log("The protests continue, but flower exports are safe.");
                 }
             }
@@ -664,24 +655,28 @@ export const EVENTS: GameEvent[] = [
     {
         id: 'miss_universe',
         title: 'Miss Universe Host',
-        description: 'The organization wants to host the next pageant in Cartagena. It costs millions but brings tourists.',
+        description: 'The organization wants to host the next pageant in Cartagena. It costs billions but brings tourists.',
         choices: [
             {
                 text: 'Host it!',
                 effect: (s, log) => {
-                    mod(s, Faction.Public, 10);
-                    mod(s, Faction.Oligarchs, 10);
-                    mod(s, Faction.Cartels, 5); // They love pageants
+                    mod(s, Faction.Public, 5);
+                    mod(s, Faction.Guerillas, -3);
+                    mod(s, Faction.Oligarchs, 3);
+                    mod(s, Faction.USA, 3);
+                    mod(s, Faction.Cartels, 3); // They love pageants
                     s.treasury -= 10;
+                    s.personalAccount += 2;
                     log("Glitz, glamour, and traffic jams.");
                 }
             },
             {
                 text: 'Too expensive.',
                 effect: (s, log) => {
-                    mod(s, Faction.Public, -5);
-                    mod(s, Faction.Oligarchs, -5);
-                    s.treasury += 2;
+                    mod(s, Faction.Public, -3);
+                    mod(s, Faction.Oligarchs, -3);
+                    mod(s, Faction.Guerillas, 2);
+                    mod(s, Faction.Cartels, -2);
                     log("Cartagena hoteliers are crying.");
                 }
             }
@@ -706,8 +701,11 @@ export const EVENTS: GameEvent[] = [
                 text: 'Let the market (and guns) decide.',
                 effect: (s, log) => {
                     mod(s, Faction.Cartels, 10);
-                    mod(s, Faction.Public, -5);
+                    mod(s, Faction.Public, -13);
+                    mod(s, Faction.Guerillas, -3);
                     mod(s, Faction.Oligarchs, 5); // More exports
+                    s.treasury += 5;
+                    s.personalAccount += 3; // Kickbacks
                     log("Exports boom. Violence booms.");
                 }
             }
@@ -721,7 +719,7 @@ export const EVENTS: GameEvent[] = [
             {
                 text: 'Send all available water bombers.',
                 effect: (s, log) => {
-                    mod(s, Faction.Public, 10);
+                    mod(s, Faction.Public, 5);
                     mod(s, Faction.Oligarchs, -5); // Cattle ranchers angry
                     mod(s, Faction.Guerillas, 2); // Saves their cover
                     s.treasury -= 5;
@@ -731,8 +729,8 @@ export const EVENTS: GameEvent[] = [
             {
                 text: 'Pray for rain.',
                 effect: (s, log) => {
-                    mod(s, Faction.Public, -15);
-                    mod(s, Faction.USA, -5);
+                    mod(s, Faction.Public, -5);
+                    mod(s, Faction.Oligarchs, 5);
                     mod(s, Faction.Guerillas, -2); // Their camps burn
                     log("The smoke reaches Bogota.");
                 }
@@ -750,6 +748,7 @@ export const EVENTS: GameEvent[] = [
                 text: 'Send the Air Force to intercept.',
                 effect: (s, log) => {
                     mod(s, Faction.Army, 5);
+                    mod(s, Faction.USA, -3);
                     s.treasury -= 2;
                     log("They found nothing. Or so they say.");
                 }
@@ -757,7 +756,8 @@ export const EVENTS: GameEvent[] = [
             {
                 text: 'Claim it\'s a sign from God.',
                 effect: (s, log) => {
-                    mod(s, Faction.Public, 5); // Some believe it
+                    mod(s, Faction.Public, 3); // Some believe it
+                    mod(s, Faction.Army, -3);
                     log("A cult forms near the volcano.");
                 }
             }
@@ -773,6 +773,7 @@ export const EVENTS: GameEvent[] = [
                 effect: (s, log) => {
                     mod(s, Faction.Public, -10); // Youth angry
                     mod(s, Faction.Army, 5); // Conservatives happy
+                    mod(s, Faction.USA, 3); // Conservatives happy
                     log("Radio stations play classical music. Everyone is asleep.");
                 }
             },
@@ -781,6 +782,7 @@ export const EVENTS: GameEvent[] = [
                 effect: (s, log) => {
                     mod(s, Faction.Public, 5);
                     mod(s, Faction.Army, -5);
+                    mod(s, Faction.USA, -2);
                     log("The party continues.");
                 }
             }
@@ -794,7 +796,10 @@ export const EVENTS: GameEvent[] = [
             {
                 text: 'Give permit. 50% state tax.',
                 effect: (s, log) => {
-                    s.treasury += 1; // It was mostly pyrite
+                    mod(s, Faction.Public, -5);
+                    mod(s, Faction.Oligarchs, 3);
+                    s.treasury += 5; // It was mostly pyrite
+                    s.personalAccount += 3; // Bribe
                     log("He found a few golden trinkets. Disappointing.");
                 }
             },
@@ -802,6 +807,7 @@ export const EVENTS: GameEvent[] = [
                 text: 'Deny. It belongs to indigenous people.',
                 effect: (s, log) => {
                     mod(s, Faction.Public, 5);
+                    mod(s, Faction.Oligarchs, -3);
                     log("Cultural heritage preserved.");
                 }
             }
@@ -818,7 +824,7 @@ export const EVENTS: GameEvent[] = [
                 text: 'Investigate your own brother.',
                 effect: (s, log) => {
                     mod(s, Faction.Public, 10);
-                    mod(s, Faction.Oligarchs, 5);
+                    mod(s, Faction.Cartels, -5);
                     log("Justice is blind. Thanksgiving dinner will be awkward.");
                 }
             },
@@ -826,7 +832,8 @@ export const EVENTS: GameEvent[] = [
                 text: 'Call it a "Deepfake".',
                 effect: (s, log) => {
                     mod(s, Faction.Public, -10); // They don't believe you
-                    mod(s, Faction.USA, -5);
+                    mod(s, Faction.Cartels, 5);
+                    s.personalAccount += 3; // More bribes
                     log("The scandal drags on for months.");
                 }
             }
@@ -842,6 +849,7 @@ export const EVENTS: GameEvent[] = [
                 effect: (s, log) => {
                     mod(s, Faction.Army, -15); // Dangerous!
                     mod(s, Faction.Public, 5);
+                    mod(s, Faction.Guerillas, 5);
                     log("You are safe for now, but the officers are grumbling.");
                 }
             },
@@ -849,8 +857,10 @@ export const EVENTS: GameEvent[] = [
                 text: 'Raise military salaries. Buying loyalty.',
                 effect: (s, log) => {
                     mod(s, Faction.Army, 15);
-                    s.treasury -= 5;
-                    log("The rumors stop. The General buys a new truck.");
+                    mod(s, Faction.Public, -5); // Costly
+                    mod(s, Faction.Guerillas, -5);
+                    s.treasury -= 7;
+                    log("The rumors stop. The General buys a swimming pool.");
                 }
             }
         ]
@@ -864,7 +874,7 @@ export const EVENTS: GameEvent[] = [
                 text: 'Lockdown everything.',
                 effect: (s, log) => {
                     mod(s, Faction.Public, 5); // Safe but bored
-                    mod(s, Faction.Oligarchs, -15); // Economy hurts
+                    mod(s, Faction.Oligarchs, -10); // Economy hurts
                     s.treasury -= 10;
                     log("The curve is flattened. The economy is also flattened.");
                 }
@@ -873,6 +883,7 @@ export const EVENTS: GameEvent[] = [
                 text: 'It\'s just a flu. Keep working.',
                 effect: (s, log) => {
                     mod(s, Faction.Oligarchs, 5);
+                    mod(s, Faction.USA, 5);
                     mod(s, Faction.Public, -15); // People dying
                     log("Hospitals collapse. You are blamed.");
                 }
@@ -888,6 +899,7 @@ export const EVENTS: GameEvent[] = [
                 text: 'Blame the previous government.',
                 effect: (s, log) => {
                     mod(s, Faction.Public, -5); // Tired of excuses
+                    s.personalAccount += 2; // Bribe from contractor
                     log("Nobody believes you anymore.");
                 }
             },
@@ -941,7 +953,8 @@ export const EVENTS: GameEvent[] = [
                 text: 'Release it silently.',
                 effect: (s, log) => {
                     mod(s, Faction.Oligarchs, 5);
-                    s.personalAccount += 2; // Bribe
+                    mod(s, Faction.Public, -5);
+                    s.personalAccount += 1; // Bribe
                     log("It disappears. Your wallet feels heavier.");
                 }
             }
@@ -956,6 +969,7 @@ export const EVENTS: GameEvent[] = [
                 text: 'Accept. Peace is good.',
                 effect: (s, log) => {
                     mod(s, Faction.Public, 5);
+                    mod(s, Faction.Guerillas, 5);
                     mod(s, Faction.Army, -10); // They want to fight
                     log("The guns are silent for December.");
                 }
@@ -966,6 +980,7 @@ export const EVENTS: GameEvent[] = [
                     mod(s, Faction.Army, 10);
                     mod(s, Faction.Guerillas, -10);
                     mod(s, Faction.Public, -5);
+                    mod(s, Faction.USA, 3);
                     log("A surprise attack kills 20 rebels. The war goes on.");
                 }
             }
@@ -981,15 +996,15 @@ export const EVENTS: GameEvent[] = [
                 effect: (s, log) => {
                     mod(s, Faction.Oligarchs, -10);
                     mod(s, Faction.Public, 5);
-                    s.treasury -= 10; // Lawsuits
                     log("Lawyers get rich. No trains.");
                 }
             },
             {
                 text: 'Ask China for help.',
                 effect: (s, log) => {
-                    mod(s, Faction.USA, -5);
-                    s.treasury -= 5;
+                    mod(s, Faction.USA, -10);
+                    mod(s, Faction.Oligarchs, 3);
+                    s.treasury += 5;
                     log("They send engineers. It moves slightly faster.");
                 }
             }
@@ -1003,15 +1018,15 @@ export const EVENTS: GameEvent[] = [
             {
                 text: 'Ban them from filming.',
                 effect: (s, log) => {
-                    mod(s, Faction.Public, -5);
-                    mod(s, Faction.USA, -5); // Freedom of speech
+                    mod(s, Faction.Public, -4);
+                    mod(s, Faction.USA, -3); // Freedom of speech
                     log("Streisand effect. Everyone watches it on VPN.");
                 }
             },
             {
                 text: 'Demand creative control.',
                 effect: (s, log) => {
-                    mod(s, Faction.Public, 5);
+                    mod(s, Faction.Public, -7);
                     s.treasury += 2; // Licensing
                     log("The show now portrays you as a superhero. Nobody watches it.");
                 }
@@ -1026,17 +1041,19 @@ export const EVENTS: GameEvent[] = [
             {
                 text: 'Cut social programs.',
                 effect: (s, log) => {
-                    mod(s, Faction.Public, -20);
+                    mod(s, Faction.Public, -15);
                     mod(s, Faction.Oligarchs, 5); // Maintaining credit
+                    mod(s, Faction.USA, 2); // IMF happy
+                    mod(s, Faction.Guerillas, 3);
                     log("The poor starve. The rich are fine.");
                 }
             },
             {
                 text: 'Increase debt.',
                 effect: (s, log) => {
-                    mod(s, Faction.Public, 5);
+                    mod(s, Faction.Public, 7);
                     mod(s, Faction.Oligarchs, -5);
-                    s.treasury -= 20;
+                    s.treasury -= 10;
                     log("Kick the can down the road.");
                 }
             }
@@ -1053,23 +1070,27 @@ export const EVENTS: GameEvent[] = [
                 text: 'Fund him. We need prestige!',
                 effect: (s, log) => {
                     s.treasury -= 5;
-                    mod(s, Faction.Public, 10);
+                    mod(s, Faction.Oligarchs, 3);
                     log("The rocket explodes on the launchpad. But the fireworks were beautiful. National pride +1.");
                 }
             },
             {
                 text: 'Ignore him.',
                 effect: (s, log) => {
-                    mod(s, Faction.Public, -2);
+                    mod(s, Faction.Oligarchs, -2);
                     log("He emigrates to NASA. Typical brain drain.");
                 }
             },
             {
                 text: 'Put a spy satellite on it.',
                 effect: (s, log) => {
-                    mod(s, Faction.Army, 10);
-                    mod(s, Faction.USA, -5);
-                    s.treasury -= 8;
+                    mod(s, Faction.Army, 5);
+                    mod(s, Faction.USA, 2);
+                    mod(s, Faction.Oligarchs, 3);
+                    mod(s, Faction.Public, -6);
+                    mod(s, Faction.Guerillas, -4);
+                    s.treasury -= 5;
+                    s.personalAccount += 2; // Bribe
                     log("It works! We can now see the traffic jams from space.");
                 }
             }
@@ -1084,6 +1105,9 @@ export const EVENTS: GameEvent[] = [
                 text: 'Subsidize the flour.',
                 effect: (s, log) => {
                     mod(s, Faction.Public, 15);
+                    mod(s, Faction.Public, -3);
+                    mod(s, Faction.USA, -3);
+                    mod(s, Faction.Guerillas, -3);
                     s.treasury -= 8;
                     log("Breakfast is saved. The people cheer with full mouths.");
                 }
@@ -1091,8 +1115,10 @@ export const EVENTS: GameEvent[] = [
             {
                 text: 'Suggest eating "cake" instead.',
                 effect: (s, log) => {
-                    mod(s, Faction.Public, -20);
+                    mod(s, Faction.Public, -15);
                     mod(s, Faction.Oligarchs, 5);
+                    mod(s, Faction.Guerillas, 3);
+                    mod(s, Faction.USA, 3);
                     log("Marie Antoinette style. Riots start in 5 minutes.");
                 }
             },
@@ -1115,7 +1141,7 @@ export const EVENTS: GameEvent[] = [
             {
                 text: 'Deny it publicly.',
                 effect: (s, log) => {
-                    mod(s, Faction.Public, -5);
+                    mod(s, Faction.Public, -3);
                     log("They think you are hiding the truth. #PabloLives trends.");
                 }
             },
@@ -1123,6 +1149,7 @@ export const EVENTS: GameEvent[] = [
                 text: 'Raid the basement.',
                 effect: (s, log) => {
                     mod(s, Faction.Army, 5);
+                    mod(s, Faction.Cartels, -5);
                     log("It was just an Elvis impersonator. Disappointing.");
                 }
             },
@@ -1130,6 +1157,8 @@ export const EVENTS: GameEvent[] = [
                 text: 'Start a "Pablo Tourism" campaign.',
                 effect: (s, log) => {
                     mod(s, Faction.Oligarchs, 10);
+                    mod(s, Faction.Army, 5);
+                    mod(s, Faction.USA, -10);
                     mod(s, Faction.Public, -10); // Victims angry
                     s.treasury += 5;
                     log("Tourists flood in. Morally bankrupt, financially sound.");
@@ -1145,17 +1174,19 @@ export const EVENTS: GameEvent[] = [
             {
                 text: 'Let them do it! Wipe the slate clean.',
                 effect: (s, log) => {
-                    mod(s, Faction.Public, 20);
+                    mod(s, Faction.Public, 15);
                     mod(s, Faction.Oligarchs, -10); // Banks angry
-                    s.treasury -= 20; // Revenue lost
+                    mod(s, Faction.Cartels, 5);
+                    s.treasury -= 15; // Revenue lost
                     log("People celebrate in the streets. The Treasury is empty.");
                 }
             },
             {
                 text: 'Pay them a ransom to restore data.',
                 effect: (s, log) => {
-                    s.treasury -= 10;
-                    s.personalAccount -= 2; // "Handling fee"
+                    mod(s, Faction.USA, -2);
+                    mod(s, Faction.Cartels, 3);
+                    s.treasury -= 5;
                     log("Data restored. You look weak.");
                 }
             },
@@ -1163,7 +1194,8 @@ export const EVENTS: GameEvent[] = [
                 text: 'Trace and arrest them.',
                 effect: (s, log) => {
                     mod(s, Faction.Army, 5);
-                    mod(s, Faction.Public, -5);
+                    mod(s, Faction.Public, -2);
+                    mod(s, Faction.Cartels, -4);
                     log("They were just teenagers in a basement. You bully.");
                 }
             }
@@ -1179,6 +1211,7 @@ export const EVENTS: GameEvent[] = [
                 effect: (s, log) => {
                     mod(s, Faction.Oligarchs, 10);
                     mod(s, Faction.Public, -5);
+                    mod(s, Faction.Guerillas, -3);
                     s.treasury += 2; // Taxes
                     log("The rich love it. Pilgrims hate it.");
                 }
@@ -1186,7 +1219,8 @@ export const EVENTS: GameEvent[] = [
             {
                 text: 'Build a slide instead.',
                 effect: (s, log) => {
-                    mod(s, Faction.Public, 15);
+                    mod(s, Faction.Public, 10);
+                    mod(s, Faction.Guerillas, -3);
                     s.treasury -= 2;
                     log("Weeeee! Most fun country in the world.");
                 }
@@ -1195,6 +1229,7 @@ export const EVENTS: GameEvent[] = [
                 text: 'Reject. Walk as penance.',
                 effect: (s, log) => {
                     mod(s, Faction.Public, 5);
+                    mod(s, Faction.Oligarchs, -5);
                     mod(s, Faction.Guerillas, 1); // Respect for land
                     log("Tradition respected. Legs tired.");
                 }
@@ -1210,7 +1245,9 @@ export const EVENTS: GameEvent[] = [
                 text: 'Ban the show.',
                 effect: (s, log) => {
                     mod(s, Faction.USA, 5);
-                    mod(s, Faction.Public, -10);
+                    mod(s, Faction.Army, 5);
+                    mod(s, Faction.Public, -8);
+                    mod(s, Faction.Guerillas, -4);
                     log("It becomes the most pirated show in history.");
                 }
             },
@@ -1218,15 +1255,20 @@ export const EVENTS: GameEvent[] = [
                 text: 'Demand royalties.',
                 effect: (s, log) => {
                     s.treasury += 5;
-                    mod(s, Faction.Guerillas, -5);
+                    s.personalAccount += 1;
+                    mod(s, Faction.Guerillas, 3);
+                    mod(s, Faction.USA, -3);
+                    mod(s, Faction.Army, -3);
                     log("We take a 30% cut of the revolution.");
                 }
             },
             {
                 text: 'Appear as a guest judge.',
                 effect: (s, log) => {
-                    mod(s, Faction.Guerillas, 10);
-                    mod(s, Faction.Army, -20);
+                    mod(s, Faction.Guerillas, 7);
+                    mod(s, Faction.Public, 5);
+                    mod(s, Faction.Army, -12);
+                    mod(s, Faction.USA, -5);
                     log("The General resigns in disgust. The soup was good though.");
                 }
             }
@@ -1257,8 +1299,8 @@ export const EVENTS: GameEvent[] = [
             {
                 text: 'Chip the politicians instead.',
                 effect: (s, log) => {
-                    mod(s, Faction.Public, 20);
-                    mod(s, Faction.Oligarchs, -15);
+                    mod(s, Faction.Public, 10);
+                    mod(s, Faction.Oligarchs, -10);
                     log("Best. Idea. Ever. Corruption drops to 0%.");
                 }
             }
@@ -1274,8 +1316,9 @@ export const EVENTS: GameEvent[] = [
                 effect: (s, log) => {
                     mod(s, Faction.USA, 15);
                     mod(s, Faction.Public, -10);
-                    s.treasury += 20; // US Aid
-                    s.personalAccount += 5;
+                    mod(s, Faction.Guerillas, -10);
+                    s.treasury += 12; // US Aid
+                    s.personalAccount += 3;
                     log("We poured some concrete in a swamp. It sank. We kept the money.");
                 }
             },
@@ -1284,6 +1327,7 @@ export const EVENTS: GameEvent[] = [
                 effect: (s, log) => {
                     mod(s, Faction.USA, -10);
                     mod(s, Faction.Public, 5);
+                    mod(s, Faction.Guerillas, 2);
                     log("Washington is unhappy. The jaguars are happy.");
                 }
             },
@@ -1292,7 +1336,10 @@ export const EVENTS: GameEvent[] = [
                 effect: (s, log) => {
                     mod(s, Faction.USA, 5);
                     mod(s, Faction.Oligarchs, 5); // Tech contracts
-                    s.treasury -= 5;
+                    mod(s, Faction.Guerillas, -2);
+                    mod(s, Faction.Public, -2);
+                    s.treasury -= 7;
+                    s.personalAccount += 1;
                     log("We bought expensive drones. They crashed immediately.");
                 }
             }
@@ -1306,14 +1353,15 @@ export const EVENTS: GameEvent[] = [
             {
                 text: 'Cover it up.',
                 effect: (s, log) => {
-                    mod(s, Faction.Public, -5);
+                    mod(s, Faction.Public, -4);
+                    mod(s, Faction.Cartels, 3);
                     log("Rumors of 'Man-Bear-Pig' circulate.");
                 }
             },
             {
                 text: 'Put it in the zoo.',
                 effect: (s, log) => {
-                    mod(s, Faction.Public, 10);
+                    mod(s, Faction.Public, 5);
                     s.treasury += 2; // Ticket sales
                     log("It is the main attraction. He seems happy eating carrots.");
                 }
@@ -1321,7 +1369,7 @@ export const EVENTS: GameEvent[] = [
             {
                 text: 'Make him Minister of Environment.',
                 effect: (s, log) => {
-                    mod(s, Faction.Public, 15);
+                    mod(s, Faction.Public, 10);
                     mod(s, Faction.Oligarchs, -5);
                     log("He is surprisingly competent. Approval ratings soar.");
                 }
@@ -1336,26 +1384,27 @@ export const EVENTS: GameEvent[] = [
             {
                 text: 'YOLO. Let\'s do it.',
                 effect: (s, log) => {
-                    mod(s, Faction.Public, 5); // Mixed reaction
-                    mod(s, Faction.Cartels, -20); // Put out of business!
-                    mod(s, Faction.Oligarchs, 10); // New markets
-                    s.treasury += 30; // Tax revenue
+                    mod(s, Faction.Public, -3); // Mixed reaction
+                    mod(s, Faction.Cartels, -15); // Put out of business!
+                    mod(s, Faction.USA, -5); // They hate it
+                    mod(s, Faction.Oligarchs, 15); // New markets
+                    s.treasury += 20; // Tax revenue
                     log("Chaos reigns. But the economy is booming. Crime is technically 0%.");
                 }
             },
             {
                 text: 'That is insane. No.',
                 effect: (s, log) => {
-                    mod(s, Faction.Army, 5);
+                    mod(s, Faction.Public, 2);
+                    mod(s, Faction.Oligarchs, -2);
                     log("Order maintained. Boring.");
                 }
             },
             {
                 text: 'Just legalize the tigers.',
                 effect: (s, log) => {
-                    mod(s, Faction.Oligarchs, 10); // Exotic pets
-                    mod(s, Faction.Public, -5); // Dangerous
-                    mod(s, Faction.Cartels, 5); // Status symbol
+                    mod(s, Faction.Public, -4); // Dangerous
+                    mod(s, Faction.Cartels, 2); // Status symbol
                     log("Tiger King: Colombia Edition.");
                 }
             }
@@ -1370,8 +1419,9 @@ export const EVENTS: GameEvent[] = [
                 text: 'Sell the rain.',
                 effect: (s, log) => {
                     mod(s, Faction.Oligarchs, 10); // Shareholders happy
-                    mod(s, Faction.Public, -25); // Furious!
-                    s.treasury += 25;
+                    mod(s, Faction.Public, -15); // Furious!
+                    mod(s, Faction.Guerillas, -3); // Furious!
+                    s.treasury += 10;
                     log("It touches the ground, it's theirs. People are collecting water illegally.");
                 }
             },
@@ -1379,16 +1429,9 @@ export const EVENTS: GameEvent[] = [
                 text: 'Kick them out.',
                 effect: (s, log) => {
                     mod(s, Faction.Public, 15);
+                    mod(s, Faction.Oligarchs, -10);
                     mod(s, Faction.USA, -5);
                     log("Water is a human right! Stay hydrated.");
-                }
-            },
-            {
-                text: 'Sell them the sewage instead.',
-                effect: (s, log) => {
-                    mod(s, Faction.Oligarchs, 5);
-                    s.treasury += 5;
-                    log("They bought it? Marketing is amazing.");
                 }
             }
         ]
@@ -1401,23 +1444,24 @@ export const EVENTS: GameEvent[] = [
             {
                 text: 'Clone me!',
                 effect: (s, log) => {
-                    s.personalAccount -= 5;
+                    s.treasury -= 5;
                     mod(s, Faction.Public, -5); // Creepy
+                    mod(s, Faction.Oligarchs, 5);
                     log("There are now two of you. He is sleeping with your wife. Bad idea.");
                 }
             },
             {
                 text: 'Arrest the mad scientist.',
                 effect: (s, log) => {
-                    mod(s, Faction.Army, 5);
+                    mod(s, Faction.Army, 3);
                     log("He is in jail. Or is it a clone of him?");
                 }
             },
             {
                 text: 'Clone the best soccer player instead.',
                 effect: (s, log) => {
-                    mod(s, Faction.Public, 20);
-                    s.treasury -= 10;
+                    mod(s, Faction.Public, 5);
+                    s.treasury -= 5;
                     log("World Cup guaranteed. The people love you.");
                 }
             }
@@ -1431,7 +1475,8 @@ export const EVENTS: GameEvent[] = [
             {
                 text: 'Keep it in the palace garden.',
                 effect: (s, log) => {
-                    mod(s, Faction.Public, -10); // Ostentatious
+                    mod(s, Faction.Public, -6); // Ostentatious
+                    mod(s, Faction.USA, -2);
                     mod(s, Faction.Oligarchs, 5); // Classy
                     log("It blinds pilots flying overhead.");
                 }
@@ -1439,16 +1484,17 @@ export const EVENTS: GameEvent[] = [
             {
                 text: 'Melt it down for the Treasury.',
                 effect: (s, log) => {
-                    s.treasury += 30;
+                    s.treasury += 10;
                     mod(s, Faction.Public, 10);
+                    mod(s, Faction.Oligarchs, -3);
                     log("Fiscal responsibility! The Sheikh is offended.");
                 }
             },
             {
                 text: 'Drive it to work.',
                 effect: (s, log) => {
-                    mod(s, Faction.Army, -5); // They are jealous
-                    mod(s, Faction.Public, 5); // It looks cool
+                    mod(s, Faction.Army, 2); // They are jealous
+                    mod(s, Faction.Public, -4); // It looks cool
                     log("Traffic moves out of your way. Fast.");
                 }
             }
@@ -1463,7 +1509,7 @@ export const EVENTS: GameEvent[] = [
                 text: 'Turn it off!',
                 effect: (s, log) => {
                     mod(s, Faction.Public, 5);
-                    s.treasury -= 5; // Wasted money
+                    mod(s, Faction.Army, -5);
                     log("Back to normal jams. Humans 1, Machines 0.");
                 }
             },
@@ -1473,13 +1519,6 @@ export const EVENTS: GameEvent[] = [
                     mod(s, Faction.Public, -15);
                     mod(s, Faction.Oligarchs, 10); // Deliveries are fast
                     log("Crosswalks are death zones. Amazon delivery is instant.");
-                }
-            },
-            {
-                text: 'Teach it "Colombian Driving" logic.',
-                effect: (s, log) => {
-                    mod(s, Faction.Public, 5);
-                    log("The AI learns to honk and ignore lanes. It has become sentient.");
                 }
             }
         ]
@@ -1492,7 +1531,7 @@ export const EVENTS: GameEvent[] = [
             {
                 text: 'Pass the tax.',
                 effect: (s, log) => {
-                    mod(s, Faction.Public, -20); // DO NOT TOUCH THE PORK
+                    mod(s, Faction.Public, -10); // DO NOT TOUCH THE PORK
                     mod(s, Faction.Guerillas, 3); // Unrest
                     s.treasury += 5;
                     log("Riots in the Antioquia region. You are hated.");
@@ -1501,15 +1540,9 @@ export const EVENTS: GameEvent[] = [
             {
                 text: 'Veto it. Pork is culture.',
                 effect: (s, log) => {
-                    mod(s, Faction.Public, 10);
-                    log("Cholesterol levels rise. Approvals rise.");
-                }
-            },
-            {
-                text: 'Only tax salads.',
-                effect: (s, log) => {
                     mod(s, Faction.Public, 5);
-                    log("Vegetarians protest silently.");
+                    mod(s, Faction.Guerillas, -3);
+                    log("Cholesterol levels rise. Approvals rise.");
                 }
             }
         ]
@@ -1522,7 +1555,7 @@ export const EVENTS: GameEvent[] = [
             {
                 text: 'Yes! Winter is coming.',
                 effect: (s, log) => {
-                    s.treasury -= 40; // Expensive!
+                    s.treasury -= 25; // Expensive!
                     mod(s, Faction.Oligarchs, 15); // Contracts
                     mod(s, Faction.Public, 5);
                     log("We are bankrupt, but the bobsled track is nice.");
@@ -1532,15 +1565,18 @@ export const EVENTS: GameEvent[] = [
                 text: 'No. We are a tropical country.',
                 effect: (s, log) => {
                     mod(s, Faction.Public, 5); // Sensible
+                    mod(s, Faction.Oligarchs, -6); // Contracts
                     log("We save billions. Boring.");
                 }
             },
             {
                 text: 'Host the "Narco-Olympics" instead.',
                 effect: (s, log) => {
-                    mod(s, Faction.Cartels, 15);
-                    mod(s, Faction.USA, -20);
+                    mod(s, Faction.Cartels, 10);
+                    mod(s, Faction.Public, -5);
+                    mod(s, Faction.USA, -15);
                     s.treasury += 10;
+                    s.personalAccount += 3;
                     log("Events include 'Border Crossing' and 'Money Laundering'. Ratings are huge.");
                 }
             }
@@ -1555,7 +1591,8 @@ export const EVENTS: GameEvent[] = [
                 text: 'Feed them empanadas.',
                 effect: (s, log) => {
                     s.treasury -= 2;
-                    mod(s, Faction.Public, 10);
+                    mod(s, Faction.Public, 5);
+                    mod(s, Faction.USA, -3);
                     log("They are fat and happy. The cutest drain on the budget.");
                 }
             },
@@ -1563,6 +1600,7 @@ export const EVENTS: GameEvent[] = [
                 text: 'Send them back.',
                 effect: (s, log) => {
                     mod(s, Faction.USA, 5);
+                    mod(s, Faction.Public, -5);
                     log("China is insulted. Trade war begins.");
                 }
             },
@@ -1584,7 +1622,8 @@ export const EVENTS: GameEvent[] = [
                 text: 'Grant it.',
                 effect: (s, log) => {
                     mod(s, Faction.Public, 5);
-                    s.treasury -= 1;
+                    mod(s, Faction.Army, -3);
+                    s.treasury -= 3;
                     log("He is now streaming rituals on Twitch.");
                 }
             },
@@ -1592,14 +1631,8 @@ export const EVENTS: GameEvent[] = [
                 text: 'Refuse. Preserve tradition.',
                 effect: (s, log) => {
                     mod(s, Faction.Public, -5);
+                    mod(s, Faction.Army, 3);
                     log("They block the highway in protest.");
-                }
-            },
-            {
-                text: 'Ask him to curse your enemies online.',
-                effect: (s, log) => {
-                    mod(s, Faction.Oligarchs, -5);
-                    log("The opposition leader gets a virus. Magic or tech?");
                 }
             }
         ]
@@ -1612,8 +1645,9 @@ export const EVENTS: GameEvent[] = [
             {
                 text: 'Sell it to Elon Musk.',
                 effect: (s, log) => {
-                    s.treasury += 20;
+                    s.treasury += 5;
                     mod(s, Faction.USA, 5);
+                    mod(s, Faction.Army, -3); // Lost strategic asset
                     log("He makes a new battery. We get cash.");
                 }
             },
@@ -1621,13 +1655,13 @@ export const EVENTS: GameEvent[] = [
                 text: 'Touch it.',
                 effect: (s, log) => {
                     log("You now have visions of the future. Lottery numbers!");
-                    s.personalAccount += 10;
+                    s.personalAccount += 3;
                 }
             },
             {
                 text: 'Worship it.',
                 effect: (s, log) => {
-                    mod(s, Faction.Public, -10); // Crazy
+                    mod(s, Faction.Oligarchs, 3); // New age market
                     log("You start wearing tinfoil hats.");
                 }
             }
@@ -1641,7 +1675,7 @@ export const EVENTS: GameEvent[] = [
             {
                 text: 'Pick Miss Antioquia (Oligarchs favorite).',
                 effect: (s, log) => {
-                    mod(s, Faction.Oligarchs, 10);
+                    mod(s, Faction.Oligarchs, 5);
                     mod(s, Faction.Public, -5);
                     log("The rich applaud. The poor boo.");
                 }
@@ -1649,7 +1683,7 @@ export const EVENTS: GameEvent[] = [
             {
                 text: 'Pick Miss Choco (Public favorite).',
                 effect: (s, log) => {
-                    mod(s, Faction.Public, 10);
+                    mod(s, Faction.Public, 5);
                     mod(s, Faction.Oligarchs, -5);
                     log("A victory for the people!");
                 }
@@ -1657,38 +1691,9 @@ export const EVENTS: GameEvent[] = [
             {
                 text: 'Pick yourself.',
                 effect: (s, log) => {
-                    mod(s, Faction.Army, -10);
-                    mod(s, Faction.Public, -10);
+                    mod(s, Faction.Public, -8);
+                    mod(s, Faction.Oligarchs, -8);
                     log("You wear the sash. It is very awkward.");
-                }
-            }
-        ]
-    },
-    {
-        id: 'volcano_sacrifice',
-        title: 'The Angry Mountain',
-        description: 'Galeras volcano is smoking. A local witch doctor says it needs a sacrifice.',
-        choices: [
-            {
-                text: 'Evacuate the area.',
-                effect: (s, log) => {
-                    mod(s, Faction.Public, 5);
-                    s.treasury -= 5;
-                    log("Safe, but expensive.");
-                }
-            },
-            {
-                text: 'Throw the Finance Minister in.',
-                effect: (s, log) => {
-                    mod(s, Faction.Public, 20); // Everyone hated him
-                    s.treasury += 5; // Saved his pension
-                    log("The volcano stops smoking immediately. Coincidence?");
-                }
-            },
-            {
-                text: 'Ignore it.',
-                effect: (s, log) => {
-                    log("It erupts. Ash covers your car.");
                 }
             }
         ]
@@ -1734,7 +1739,8 @@ export const EVENTS: GameEvent[] = [
                 text: 'Return it for a reward.',
                 effect: (s, log) => {
                     mod(s, Faction.USA, 15);
-                    s.treasury += 10;
+                    mod(s, Faction.Army, -15);
+                    s.personalAccount += 2;
                     log("The Americans are relieved. We pretend we didn't see anything.");
                 }
             },
@@ -1742,14 +1748,14 @@ export const EVENTS: GameEvent[] = [
                 text: 'Keep it. We are a nuclear power now!',
                 effect: (s, log) => {
                     mod(s, Faction.USA, -50); // DEFCON 1
-                    mod(s, Faction.Army, 20);
+                    mod(s, Faction.Army, 15);
                     log("The world is terrified. Kim Jong Un sends a friend request.");
                 }
             },
             {
                 text: 'Try to take it apart with a hammer.',
                 effect: (s, log) => {
-                    // 50% chance of death?
+                    mod(s, Faction.Army, -5);
                     log("It didn't explode. But now you glow in the dark.");
                 }
             }
@@ -1763,24 +1769,23 @@ export const EVENTS: GameEvent[] = [
             {
                 text: 'Do it! War!',
                 effect: (s, log) => {
-                    mod(s, Faction.Army, 10);
-                    mod(s, Faction.Public, 10);
-                    s.treasury -= 50;
-                    log("We invaded the Amazon. We got lost immediately. Brazil didn't notice.");
+                    mod(s, Faction.Army, 15);
+                    mod(s, Faction.Public, 5);
+                    s.treasury -= 25;
+                    log("We invaded the Amazon. We got lost immediately. Brazil didn't even notice.");
                 }
             },
             {
                 text: 'It is just a game.',
                 effect: (s, log) => {
-                    mod(s, Faction.Public, -20); // Traitor
+                    mod(s, Faction.Public, -5); // Traitor
                     log("You are burned in effigy.");
                 }
             },
             {
                 text: 'Bribe FIFA to annul the match.',
                 effect: (s, log) => {
-                    s.treasury -= 10;
-                    s.personalAccount -= 2;
+                    s.treasury -= 5;
                     mod(s, Faction.Cartels, 5); // They approve of match fixing
                     log("Match replayed. We lost again.");
                 }
@@ -1796,7 +1801,8 @@ export const EVENTS: GameEvent[] = [
                 text: 'Approve it.',
                 effect: (s, log) => {
                     mod(s, Faction.Public, 5);
-                    mod(s, Faction.Oligarchs, -10); // They liked rigging it
+                    mod(s, Faction.Guerillas, -5);
+                    mod(s, Faction.Oligarchs, -5); // They liked rigging it
                     log("Fair elections? A dangerous precedent.");
                 }
             },
@@ -1804,6 +1810,7 @@ export const EVENTS: GameEvent[] = [
                 text: 'Rig the blockchain.',
                 effect: (s, log) => {
                     mod(s, Faction.Public, -10);
+                    mod(s, Faction.Oligarchs, 5);
                     s.personalAccount += 5; // Bribes
                     log("You win with 140% of the vote.");
                 }
@@ -1825,7 +1832,7 @@ export const EVENTS: GameEvent[] = [
             {
                 text: 'The Capybara.',
                 effect: (s, log) => {
-                    mod(s, Faction.Public, 10);
+                    mod(s, Faction.Public, 5);
                     log("Chill, friendly, and round. Just like us.");
                 }
             },
@@ -1855,23 +1862,28 @@ export const EVENTS: GameEvent[] = [
                 text: 'Send the Army to break the blockade.',
                 effect: (s, log) => {
                     mod(s, Faction.Army, 5);
-                    mod(s, Faction.Public, 10); // They need caffeine
+                    mod(s, Faction.Public, -8); 
                     log("The coffee arrives. Violence was justified.");
                 }
             },
             {
                 text: 'Import instant coffee.',
                 effect: (s, log) => {
-                    mod(s, Faction.Public, -20); // Disgusting
+                    mod(s, Faction.Public, -5); // Disgusting
+                    mod(s, Faction.Oligarchs, 5); 
+                    s.treasury -= 2;
                     log("People would rather sleep.");
                 }
             },
             {
-                text: 'Air drop espresso shots.',
+                text: 'Give the truckers what they want.',
                 effect: (s, log) => {
-                    mod(s, Faction.Public, 15);
-                    s.treasury -= 5;
-                    log("IT RAINS CAFFEINA! PRAISE BE!");
+                    mod(s, Faction.Public, 5);
+                    mod(s, Faction.Guerillas, 1);
+                    mod(s, Faction.Oligarchs, -5);
+                    mod(s, Faction.USA, -1);
+                    s.treasury -= 2;
+                    log("The coffee flows again. You are a hero.");
                 }
             }
         ]
@@ -1884,7 +1896,8 @@ export const EVENTS: GameEvent[] = [
             {
                 text: 'Issue a decree: He lives.',
                 effect: (s, log) => {
-                    mod(s, Faction.Public, 10);
+                    mod(s, Faction.Public, 5);
+                    mod(s, Faction.Oligarchs, -3);
                     log("You saved Pedro el Escamoso. Hero.");
                 }
             },
@@ -1892,6 +1905,7 @@ export const EVENTS: GameEvent[] = [
                 text: 'Let art be art.',
                 effect: (s, log) => {
                     mod(s, Faction.Public, -5);
+                    mod(s, Faction.USA, 3);
                     log("Tears flood the streets.");
                 }
             },
@@ -1899,36 +1913,8 @@ export const EVENTS: GameEvent[] = [
                 text: 'Kill him yourself in a cameo.',
                 effect: (s, log) => {
                     mod(s, Faction.Army, 5); // Tough guy
-                    mod(s, Faction.Public, 5); // Ratings gold
+                    mod(s, Faction.Public, -10); // Ratings gold
                     log("You shot him! Best episode ever.");
-                }
-            }
-        ]
-    },
-    {
-        id: 'shark_tornado',
-        title: 'Shark Phenomenon',
-        description: 'A waterspout on the coast has picked up sharks and dropped them on a town. Literally Sharknado.',
-        choices: [
-            {
-                text: 'Send chainsaws.',
-                effect: (s, log) => {
-                    mod(s, Faction.Public, 5);
-                    log("Life imitates bad movies.");
-                }
-            },
-            {
-                text: 'Blame the opposition.',
-                effect: (s, log) => {
-                    mod(s, Faction.Oligarchs, -5);
-                    log("They say it is climate change. You say it is communism.");
-                }
-            },
-            {
-                text: 'Sell the movie rights.',
-                effect: (s, log) => {
-                    s.treasury += 5;
-                    log("Sharknado 7: Colombia.");
                 }
             }
         ]
@@ -1955,7 +1941,7 @@ export const EVENTS: GameEvent[] = [
             {
                 text: 'Sell it on eBay.',
                 effect: (s, log) => {
-                    s.treasury += 10;
+                    s.treasury += 5;
                     log("Sold to a buyer in Transylvania. Good luck to them.");
                 }
             }
@@ -2000,9 +1986,9 @@ export const EVENTS: GameEvent[] = [
             {
                 text: 'Congratulate her. Comrades!',
                 effect: (s, log) => {
-                    mod(s, Faction.USA, -20);
+                    mod(s, Faction.USA, -15);
                     mod(s, Faction.Guerillas, 10);
-                    mod(s, Faction.Public, -10);
+                    mod(s, Faction.Public, -7);
                     log("Trump tweets: 'WEAK! Colombia is LOST!' Sanctions incoming.");
                 }
             },
@@ -2017,7 +2003,7 @@ export const EVENTS: GameEvent[] = [
             {
                 text: 'Say nothing. Pretend you lost your phone.',
                 effect: (s, log) => {
-                    mod(s, Faction.Oligarchs, 5); // Stability
+                    mod(s, Faction.Public, 2); // Stability
                     log("Awkward silence. Diplomatic masterpiece.");
                 }
             }
@@ -2048,7 +2034,7 @@ export const EVENTS: GameEvent[] = [
             {
                 text: 'Send him a golden coffee pot.',
                 effect: (s, log) => {
-                    s.personalAccount -= 1;
+                    s.treasury -= 1;
                     mod(s, Faction.USA, 5);
                     log("He forgets the tariff. 'Beautiful coffee, the best.'");
                 }
@@ -2065,24 +2051,24 @@ export const EVENTS: GameEvent[] = [
                 effect: (s, log) => {
                     mod(s, Faction.USA, 10);
                     mod(s, Faction.Public, 5);
-                    mod(s, Faction.Guerillas, -5);
+                    mod(s, Faction.Guerillas, -7);
                     log("She gives a speech from your balcony. The Regime burns your flag.");
                 }
             },
             {
                 text: 'Hand her over.',
                 effect: (s, log) => {
-                    mod(s, Faction.USA, -20); // Human rights violation
+                    mod(s, Faction.USA, -15); // Human rights violation
                     mod(s, Faction.Guerillas, 5);
-                    s.personalAccount += 5; // Secret payment
+                    s.personalAccount += 2; // Secret payment
                     log("The world is horrified. Your Swiss account is happy.");
                 }
             },
             {
                 text: 'Smuggle her to Miami.',
                 effect: (s, log) => {
-                    mod(s, Faction.USA, 5);
-                    s.treasury -= 2;
+                    mod(s, Faction.USA, 3);
+                    mod(s, Faction.Guerillas, -3);
                     log("Problem solved. Not your problem anymore.");
                 }
             }
@@ -2143,36 +2129,10 @@ export const EVENTS: GameEvent[] = [
                 text: 'Buy it yourself and resell it.',
                 effect: (s, log) => {
                     s.treasury += 15;
-                    mod(s, Faction.Cartels, 5); // You cut them in
+                    mod(s, Faction.Public, -5); // You cut them 
+                    mod(s, Faction.Cartels, 5); // You cut them 
+                    mod(s, Faction.Oligarchs, -3); 
                     log("The state is now the biggest smuggler.");
-                }
-            }
-        ]
-    },
-    {
-        id: 'fake_coup',
-        title: 'The Drone "Attack"',
-        description: 'The Vice President claims a Colombian drone attacked the government palace. It was actually a bird hitting a power line.',
-        choices: [
-            {
-                text: 'Apologize to the bird.',
-                effect: (s, log) => {
-                    mod(s, Faction.Public, 5);
-                    log("The bird is a national martyr.");
-                }
-            },
-            {
-                text: 'Admit it! "Yes, our drones are deadly."',
-                effect: (s, log) => {
-                    mod(s, Faction.Army, 5);
-                    mod(s, Faction.USA, 5);
-                    log("We look powerful. Nobody needs to know it was a pigeon.");
-                }
-            },
-            {
-                text: 'Send inspectors.',
-                effect: (s, log) => {
-                    log("They were denied entry. The drama continues.");
                 }
             }
         ]
@@ -2197,7 +2157,7 @@ export const EVENTS: GameEvent[] = [
                     mod(s, Faction.Oligarchs, 10);
                     mod(s, Faction.Public, -10);
                     mod(s, Faction.Cartels, 2); // Construction contracts
-                    s.personalAccount += 5; // Condo gift
+                    s.personalAccount += 2; // Condo gift
                     log("It is hideous. But the suites are nice.");
                 }
             },
@@ -2225,7 +2185,7 @@ export const EVENTS: GameEvent[] = [
             {
                 text: 'Let them pass. "Vaya con Dios".',
                 effect: (s, log) => {
-                    mod(s, Faction.USA, -20);
+                    mod(s, Faction.USA, -15);
                     mod(s, Faction.Public, 5);
                     log("Trump threatens to nuke the highway. He is joking... right?");
                 }
@@ -2262,7 +2222,7 @@ export const EVENTS: GameEvent[] = [
             {
                 text: 'Ask for the "Trump Cut".',
                 effect: (s, log) => {
-                    mod(s, Faction.Public, -20); // You look ridiculous
+                    mod(s, Faction.Public, -15); // You look ridiculous
                     mod(s, Faction.USA, 10); // Flattery works
                     log("You now have the most famous hair in Latin America.");
                 }
@@ -2279,16 +2239,17 @@ export const EVENTS: GameEvent[] = [
             {
                 text: 'Seize it all for the State.',
                 effect: (s, log) => {
-                    s.treasury += 25;
-                    mod(s, Faction.Cartels, -15);
-                    mod(s, Faction.USA, 5);
+                    s.treasury += 10;
+                    mod(s, Faction.Cartels, -13);
+                    mod(s, Faction.USA, 5)
+                    mod(s, Faction.Public, 5);
                     log("A massive bust. The Treasury is full, but you have new enemies.");
                 }
             },
             {
                 text: '"Lose" the evidence.',
                 effect: (s, log) => {
-                    s.personalAccount += 10;
+                    s.personalAccount += 2;
                     mod(s, Faction.Cartels, 10);
                     mod(s, Faction.USA, -10);
                     mod(s, Faction.Army, -5); // Corrupt
@@ -2299,7 +2260,8 @@ export const EVENTS: GameEvent[] = [
                 text: 'Turn it into a museum piece.',
                 effect: (s, log) => {
                     mod(s, Faction.Public, 5);
-                    mod(s, Faction.Cartels, -5); // Mockery
+                    mod(s, Faction.USA, 3);
+                    mod(s, Faction.Cartels, -10); // Mockery
                     log("Kids love playing in the drug boat.");
                 }
             }
@@ -2348,7 +2310,7 @@ export const EVENTS: GameEvent[] = [
                 effect: (s, log) => {
                     mod(s, Faction.Guerillas, 15);
                     mod(s, Faction.Public, 5);
-                    mod(s, Faction.Oligarchs, -20); // They owned that land
+                    mod(s, Faction.Oligarchs, -15); // They owned that land
                     log("A historic agreement. The landowners are buying guns.");
                 }
             },
@@ -2379,7 +2341,7 @@ export const EVENTS: GameEvent[] = [
             {
                 text: 'Protect him (Witness Protection).',
                 effect: (s, log) => {
-                    mod(s, Faction.Cartels, -20);
+                    mod(s, Faction.Cartels, -15);
                     mod(s, Faction.USA, 15);
                     mod(s, Faction.Public, 5);
                     log("He sings like a canary. Major arrests follow.");
@@ -2388,7 +2350,7 @@ export const EVENTS: GameEvent[] = [
             {
                 text: 'Sell him back to the Clan.',
                 effect: (s, log) => {
-                    s.personalAccount += 15;
+                    s.personalAccount += 3;
                     mod(s, Faction.Cartels, 15);
                     mod(s, Faction.USA, -10);
                     mod(s, Faction.Public, -10);
@@ -2437,5 +2399,151 @@ export const EVENTS: GameEvent[] = [
                 }
             }
         ]
-    }
+    },
+   { 
+    // ChatGPT balancing events
+    id: 'army_modernization',
+    title: 'Military Professionalization Drive',
+    description:
+      'The Army complains that politics is making them look incompetent. The Defense Ministry proposes a boring-but-serious reform package: logistics, training, pay transparency, and anti-corruption audits.',
+    choices: [
+      {
+        text: 'Fund training, audits, and logistics reforms.',
+        effect: (s, log) => {
+          mod(s, Faction.Army, 10);        // soft Army win
+          mod(s, Faction.Public, 3);       // people like less corruption
+          mod(s, Faction.Oligarchs, -3);   // contractors lose easy money
+          mod(s, Faction.Cartels, -2);     // harder to bribe units
+          log('The Army grumbles less. Generals quietly cancel some “special budgets”.');
+        }
+      },
+      {
+        text: 'Skip the reforms. Just buy shiny hardware for parades.',
+        effect: (s, log) => {
+          mod(s, Faction.Army, 5);
+          mod(s, Faction.Public, -5);
+          mod(s, Faction.Oligarchs, 3);   // contracts
+          log('The parade looks amazing. The supply chain remains a disaster.');
+        }
+      }
+    ]
+  },
+
+  {
+    id: 'quiet_us_diplomacy',
+    title: 'Quiet Diplomatic Channel',
+    description:
+      'Your Foreign Minister suggests a “boring” backchannel with Washington: anti-corruption cooperation, extradition paperwork, and joint coast guard training. No tweets. No drama.',
+    choices: [
+      {
+        text: 'Do it quietly. Keep it technical and calm.',
+        effect: (s, log) => {
+          mod(s, Faction.USA, 8);          // stabilization without spectacle
+          mod(s, Faction.Public, -2);      // “why are we cozying up?”
+          mod(s, Faction.Cartels, -3);     // extraditions scare them
+          log('State Department people stop panicking. Nobody gets a viral clip.');
+        }
+      },
+      {
+        text: 'Reject it. Diplomacy should be public and theatrical.',
+        effect: (s, log) => {
+          mod(s, Faction.Public, 3);       // nationalist optics
+          mod(s, Faction.USA, -8);
+          log('The crowd cheers. The embassy writes very long cables.');
+        }
+      }
+    ]
+  },
+
+  {
+    id: 'cartel_retaliation',
+    title: 'Cartel Message',
+    description:
+      'After recent seizures, a cartel sends a “message”: a coordinated strike on trucking routes and port logistics. Nothing explodes (yet). The economy is choking.',
+    choices: [
+      {
+        text: 'Crack down hard on the routes with checkpoints.',
+        effect: (s, log) => {
+          mod(s, Faction.Army, 5);
+          mod(s, Faction.Cartels, -10);
+          mod(s, Faction.Public, -5);      // delays, harassment
+          mod(s, Faction.Oligarchs, -5);   // commerce disrupted
+          log('Trade moves again, slowly. Everyone hates the checkpoints.');
+        }
+      },
+      {
+        text: 'Cut a quiet deal: they stop if you stop embarrassing them.',
+        effect: (s, log) => {
+          mod(s, Faction.Cartels, 10);
+          mod(s, Faction.Public, -8);
+          mod(s, Faction.USA, -5);
+          log('The routes reopen overnight. Journalists ask why it happened at all.');
+        }
+      },
+      {
+        text: 'Offer an amnesty program for low-level operators.',
+        effect: (s, log) => {
+          mod(s, Faction.Public, 5);       // “at least it’s not war”
+          mod(s, Faction.Cartels, -5);     // splits the org
+          mod(s, Faction.Guerillas, 2);    // armed groups recruit disaffected
+          log('Some take the deal. Hardliners call it betrayal and go rogue.');
+        }
+      }
+    ]
+  },
+
+  {
+    id: 'public_opinion_backlash',
+    title: 'The Mood Turns',
+    description:
+      'A famous comedian starts mocking your administration nightly. The jokes are accurate. Public sentiment is slipping — not because of one scandal, but because people are tired.',
+    choices: [
+      {
+        text: 'Lean into it. Invite them to the palace for a roast.',
+        effect: (s, log) => {
+          mod(s, Faction.Public, 8);       // genuine optics win
+          mod(s, Faction.Army, -3);        // “undignified”
+          mod(s, Faction.Oligarchs, -2);   // they hate uncertainty
+          log('It’s weirdly charming. For a week, you look human.');
+        }
+      },
+      {
+        text: 'Pressure the networks to cancel the show.',
+        effect: (s, log) => {
+          mod(s, Faction.Public, -10);
+          mod(s, Faction.USA, -3);         // press freedom vibes
+          mod(s, Faction.Army, 3);         // “order”
+          log('The show disappears. So does your remaining coolness.');
+        }
+      }
+    ]
+  },
+
+  {
+    id: 'services_in_conflict_zone',
+    title: 'State Presence Without Guns',
+    description:
+      'Advisors propose a “services surge” in contested rural zones: clinics, schools, land titles, and roads — with civilian leadership. It undercuts Guerilla recruiting, but it is slow and politically messy.',
+    choices: [
+      {
+        text: 'Launch the services surge (civilian-led).',
+        effect: (s, log) => {
+          mod(s, Faction.Guerillas, -8);   // recruitment drops
+          mod(s, Faction.Public, 5);       // tangible improvements
+          mod(s, Faction.Army, -3);        // they feel sidelined
+          mod(s, Faction.Oligarchs, 2);    // stability helps investment
+          log('It’s not sexy, but it works. Guerrilla pamphlets stop landing as well.');
+        }
+      },
+      {
+        text: 'Make it military-led for “discipline”.',
+        effect: (s, log) => {
+          mod(s, Faction.Army, 5);
+          mod(s, Faction.Guerillas, -5);
+          mod(s, Faction.Public, -5);      // heavy-handed execution
+          log('The roads get built faster. The rumors get uglier too.');
+        }
+      }
+    ]
+  }
 ];

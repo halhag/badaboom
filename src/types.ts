@@ -10,12 +10,19 @@ export enum Faction {
 export interface GameState {
     month: number;
     year: number;
-    treasury: number; // In millions
-    personalAccount: number; // In millions
+    treasury: number; // In billions
+    personalAccount: number; // In billions
     popularity: Record<Faction, number>;
     isAlive: boolean;
     isExiled: boolean;
+    isVictory?: boolean;
     gameOverReason?: string;
+}
+
+export interface StateChanges {
+    treasury: number;
+    personalAccount: number;
+    popularity: Partial<Record<Faction, number>>;
 }
 
 export interface Choice {

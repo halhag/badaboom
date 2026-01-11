@@ -1,19 +1,59 @@
 import './style.css'
 import { GameEngine } from './game';
-import { GameEvent, Choice, Faction } from './types';
+import { GameEvent, Choice, Faction, StateChanges, GameState } from './types';
 import { calculateScore } from './rules';
 
 const app = document.querySelector<HTMLDivElement>('#app')!;
 
+function generateChangesHtml(changes: StateChanges, state: GameState): string {
+    const parts: string[] = [];
+    
+    if (changes.treasury !== 0) {
+        const sign = changes.treasury > 0 ? "+" : "";
+        const color = changes.treasury > 0 ? "var(--accent-color)" : "var(--danger-color)";
+        parts.push(`<div>Treasury: <span style="color:${color}">${sign}$${changes.treasury}B</span></div>`);
+    }
+
+    if (changes.personalAccount !== 0) {
+        const sign = changes.personalAccount > 0 ? "+" : "";
+        const color = changes.personalAccount > 0 ? "var(--accent-color)" : "var(--danger-color)";
+        parts.push(`<div>Swiss Account: <span style="color:${color}">${sign}$${changes.personalAccount}B</span></div>`);
+    }
+
+    Object.entries(changes.popularity).forEach(([faction, diff]) => {
+         const val = diff as number;
+         const sign = val > 0 ? "+" : "";
+         const color = val > 0 ? "var(--accent-color)" : "var(--danger-color)";
+         parts.push(`<div>${faction}: <span style="color:${color}">${sign}${val}%</span></div>`);
+    });
+
+    if (parts.length === 0) return "";
+
+    let prevMonth = state.month - 1;
+    let prevYear = state.year;
+    if (prevMonth === 0) {
+        prevMonth = 12;
+        prevYear--;
+    }
+    const monthName = ["JAN", "FEB", "MAR", "APR", "MAY", "JUN", "JUL", "AUG", "SEP", "OCT", "NOV", "DEC"][prevMonth - 1];
+
+    return `<div style="text-align: left; background: #2a2a2a; padding: 15px; margin: 15px 0; border: 1px solid #444;">
+        <h3 style="text-align: center; border-bottom: 1px solid #444; padding-bottom: 5px; margin-bottom: 10px; font-size: 0.8rem; color: #888;">${monthName} ${prevYear}</h3>
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 8px; font-size: 0.9rem;">
+            ${parts.join('')}
+        </div>
+    </div>`;
+}
+
 // Simple UI Render
-function render(engine: GameEngine, currentEvent: GameEvent | null, lastLog: string) {
+function render(engine: GameEngine, currentEvent: GameEvent | null, lastLog: string, changes?: StateChanges) {
     if (!app) return;
 
-    if (!engine.state.isAlive || engine.state.isExiled) {
+    if (!engine.state.isAlive || engine.state.isExiled || engine.state.isVictory) {
         const score = calculateScore(engine.state, engine.state.isAlive); // isAlive is true if exiled (escaped), false if dead
         app.innerHTML = `
             <div class="main-monitor" style="text-align: center; justify-content: center;">
-                <h1 style="color: var(--danger-color)">GAME OVER</h1>
+                <h1 style="color: var(--danger-color)">${engine.state.isVictory ? "CONGRATULATIONS" : "GAME OVER"}</h1>
                 <p class="event-text">${engine.state.gameOverReason}</p>
                 <br/>
                 <div class="score-display" style="border: 1px dashed #666; padding: 20px; margin: 20px;">
@@ -45,8 +85,8 @@ function render(engine: GameEngine, currentEvent: GameEvent | null, lastLog: str
             <h1>EL PRESIDENTE</h1>
             <div class="status-bar">
                 <span>${monthName} ${engine.state.year}</span>
-                <span>TREASURY: $${engine.state.treasury}M</span>
-                <span>SWISS ACCT: <span style="color: var(--accent-color)">$${engine.state.personalAccount}M</span></span>
+                <span>TREASURY: $${engine.state.treasury}B</span>
+                <span>SWISS ACCT: <span style="color: var(--accent-color)">$${engine.state.personalAccount}B</span></span>
             </div>
         </div>
 
@@ -65,11 +105,15 @@ function render(engine: GameEngine, currentEvent: GameEvent | null, lastLog: str
                     <!-- Choices injected via JS to bind events -->
                 </div>
             ` : `
-                <div style="text-align: center; padding: 50px;">
-                    <p class="event-text">Checking intelligence reports...</p>
-                    <p style="color: #666; font-style: italic;">${lastLog}</p>
+                <div style="text-align: center; padding: 20px 50px;">
+                    <h2>// INTELLIGENCE REPORT</h2>
+                    <hr style="border-color: #333; opacity: 0.5; margin: 15px 0" />
+                    
+                    ${changes ? generateChangesHtml(changes, engine.state) : ''}
+                    
+                    <p style="color: #ffd700; font-size: 1.25rem; font-style: italic; margin: 30px 0;">${lastLog}</p>
                     <button id="next-turn-btn">Continue to Next Month</button>
-                    ${engine.state.personalAccount > 10 ? '<br/><br/><button class="danger" id="escape-btn">Run Away With The Money</button>' : ''}
+                    <br/><br/><button class="danger" id="escape-btn">Run Away to Switzerland</button>
                 </div>
             `}
         </div>
@@ -109,7 +153,7 @@ function render(engine: GameEngine, currentEvent: GameEvent | null, lastLog: str
 
 // Bootstrap
 const engine = new GameEngine(
-    (state, log) => { render(engine, null, log || ""); },
+    (state, log, changes) => { render(engine, null, log || "", changes); },
     (msg) => { /* Game Over dealt with in render */ },
     (event) => { render(engine, event, event ? "" : "No new major events. The country is eerily stable."); }
 );

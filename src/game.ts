@@ -1,16 +1,16 @@
 import { EVENTS } from './events';
-import { Choice, Faction, GameEvent, GameState } from './types';
+import { Choice, Faction, GameEvent, GameState, StateChanges } from './types';
 import { checkGameOver, checkDanger, calculateScore } from './rules';
 
 export class GameEngine {
     state: GameState;
     eventQueue: GameEvent[];
-    onStateChange: (state: GameState, logMsg?: string) => void;
+    onStateChange: (state: GameState, logMsg?: string, changes?: StateChanges) => void;
     onGameOver: (message: string) => void;
     onEventTriggered: (event: GameEvent | null) => void;
 
     constructor(
-        onStateChange: (s: GameState, l?: string) => void, 
+        onStateChange: (s: GameState, l?: string, c?: StateChanges) => void, 
         onGameOver: (m: string) => void,
         onEventTriggered: (e: GameEvent | null) => void
     ) {
@@ -23,10 +23,10 @@ export class GameEngine {
         this.state = {
             month: 1,
             year: 2026,
-            // 50 Million base treasury
+            // 50 Billion base treasury
             treasury: 50, 
-            // 5 Personal stash - a modest starting gift
-            personalAccount: 5,
+            // Start with 0 in Swiss Account
+            personalAccount: 0,
             popularity: {
                 [Faction.Army]: 50,
                 [Faction.Public]: 50,
@@ -36,7 +36,8 @@ export class GameEngine {
                 [Faction.Guerillas]: 20
             },
             isAlive: true,
-            isExiled: false
+            isExiled: false,
+            isVictory: false
         };
     }
 
@@ -48,6 +49,12 @@ export class GameEngine {
         if (!this.state.isAlive || this.state.isExiled) {
             this.onEventTriggered(null);
             return;
+        }
+
+        // Check for Term End (4 years = Jan 2030)
+        if (this.state.year >= 2030) {
+             this.finishGame("You survived your full 4-year term! A historic achievement.");
+             return;
         }
 
         // Check if we have events left
@@ -89,6 +96,10 @@ export class GameEngine {
     }
 
     makeChoice(choice: Choice) {
+        // Snapshot pre-state for diff
+        // We use JSON parse/stringify for a quick deep copy of the simple state object
+        const preState: GameState = JSON.parse(JSON.stringify(this.state));
+
         // Apply effect
         let logMsg = "";
         
@@ -106,7 +117,21 @@ export class GameEngine {
         // Monthly decay/maintenance
         this.monthlyProcess();
 
-        this.onStateChange(this.state, logMsg);
+        // Calculate changes
+        const changes: StateChanges = {
+            treasury: this.state.treasury - preState.treasury,
+            personalAccount: this.state.personalAccount - preState.personalAccount,
+            popularity: {}
+        };
+
+        (Object.keys(this.state.popularity) as Faction[]).forEach(key => {
+            const diff = this.state.popularity[key] - preState.popularity[key];
+            if (diff !== 0) {
+                changes.popularity[key] = diff;
+            }
+        });
+
+        this.onStateChange(this.state, logMsg, changes);
         
         // Check for Game Over conditions
         this.checkStatus();
@@ -149,16 +174,32 @@ export class GameEngine {
 
     finishGame(reason: string) {
         this.state.isAlive = true; 
+        this.state.isVictory = true;
+        this.state.gameOverReason = reason;
         const score = calculateScore(this.state, true);
-        this.onGameOver(`${reason}\n\nVICTORY?\nFinal Score: ${score}`);
+        
+        // Trigger render via onEventTriggered(null) which will now pick up the Victory state
+        this.onEventTriggered(null);
     }
 
     escape() {
+        // 10% Chance of being caught check
+        const caughtRoll = Math.random();
+        if (caughtRoll < 0.10) {
+            this.state.isAlive = false;
+            this.state.isExiled = false; // Caught, not exiled
+            this.state.gameOverReason = "INTERCEPTED. You tried to flee the country, but the authorities (or angry citizens) caught you at the airport. You spend the rest of your life in a less-than-luxurious cell with a few rats as your only friends.";
+            const score = calculateScore(this.state, false);
+            this.onGameOver(`${this.state.gameOverReason}\n\nYour flight was cancelled.\nFinal Score: ${score}`);
+            return;
+        }
+
         this.state.isExiled = true;
         this.state.isAlive = true; // Alive but exiled
         const score = calculateScore(this.state, true);
         
-        let reason = `You fled to Switzerland with ${this.state.personalAccount} million! A comfortable retirement.`;
+        const unit = this.state.personalAccount === 1 ? "billion" : "billions";
+        let reason = `You fled to Switzerland with ${this.state.personalAccount} ${unit}! A comfortable retirement.`;
 
         // Check who was about to kill you to add flavor text
         if (this.state.popularity[Faction.Army] <= 10) reason += "\nThe Army was mobilizing, but you are already sipping martinis in Zurich.";
