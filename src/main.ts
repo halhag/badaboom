@@ -1,6 +1,6 @@
 import './style.css'
 import { GameEngine } from './game';
-import { GameEvent, Choice, Faction, StateChanges, GameState } from './types';
+import { GameEvent, StateChanges, GameState } from './types';
 import { calculateScoreBreakdown, getRating } from './rules';
 
 const app = document.querySelector<HTMLDivElement>('#app')!;
@@ -182,8 +182,8 @@ function render(engine: GameEngine, currentEvent: GameEvent | null, lastLog: str
 
 // Bootstrap
 const engine = new GameEngine(
-    (state, log, changes) => { render(engine, null, log || "", changes); },
-    (msg) => { /* Game Over dealt with in render */ },
+    (_state, log, changes) => { render(engine, null, log || "", changes); },
+    (_msg) => { /* Game Over dealt with in render */ },
     (event) => { render(engine, event, event ? "" : "No new major events. The country is eerily stable."); }
 );
 

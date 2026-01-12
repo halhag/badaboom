@@ -86,7 +86,7 @@ export class GameEngine {
         if (checkDanger(this.state)) {
             event.choices.push({
                 text: "⚠️ ESCAPE: Flee to Switzerland 🇨🇭 (Game Over)",
-                effect: (s, log) => {
+                effect: (_s, _log) => {
                     this.escape();
                 }
             });
@@ -176,7 +176,6 @@ export class GameEngine {
         this.state.isAlive = true; 
         this.state.isVictory = true;
         this.state.gameOverReason = reason;
-        const score = calculateScore(this.state, true);
         
         // Trigger render via onEventTriggered(null) which will now pick up the Victory state
         this.onEventTriggered(null);

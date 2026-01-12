@@ -2166,7 +2166,7 @@ export const EVENTS: GameEvent[] = [
             },
             {
                 text: 'Only if it is invisible.',
-                effect: (s, log) => {
+                effect: (_s, log) => {
                     log("They didn't understand the joke. Project cancelled.");
                 }
             }
