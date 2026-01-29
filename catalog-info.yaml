@@ -1,0 +1,10 @@
+apiVersion: backstage.io/v1alpha1
+kind: Component
+metadata:
+  name: badaboom
+  annotations:
+    github.com/project-slug: halhag/badaboom
+spec:
+  type: otherworldly
+  lifecycle: unknown
+  owner: sw-enabling-team-developers
